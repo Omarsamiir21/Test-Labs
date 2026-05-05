@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Security Audit — kali</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3e;
+      --text: #e2e8f0; --muted: #8892a4;
+      --red: #ef4444; --orange: #f97316; --yellow: #eab308;
+      --green: #22c55e; --blue: #3b82f6; --purple: #a855f7;
+    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 2rem; }
+    h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; }
+    .risk-banner {
+      border-radius: 10px; padding: 1.25rem 1.5rem; margin-bottom: 2rem;
+      display: flex; align-items: center; gap: 1rem;
+    }
+    .risk-critical { background: rgba(239,68,68,0.2);  border: 1px solid var(--red);    }
+    .risk-high      { background: rgba(249,115,22,0.2); border: 1px solid var(--orange); }
+    .risk-medium    { background: rgba(234,179,8,0.2);  border: 1px solid var(--yellow); }
+    .risk-low       { background: rgba(34,197,94,0.2);  border: 1px solid var(--green);  }
+    .risk-label { font-size: 1.1rem; font-weight: 700; }
+    .risk-critical .risk-label { color: var(--red);    }
+    .risk-high      .risk-label { color: var(--orange); }
+    .risk-medium    .risk-label { color: var(--yellow); }
+    .risk-low       .risk-label { color: var(--green);  }
+    section { margin-bottom: 2.5rem; }
+    h2 { font-size: 1.1rem; font-weight: 600; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th, td { padding: 0.55rem 0.75rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: var(--surface); color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; }
+    tr:hover td { background: rgba(255,255,255,0.03); }
+    .row-danger td  { background: rgba(239,68,68,0.1); }
+    .row-warning td { background: rgba(249,115,22,0.1); }
+    .badge { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; }
+    .badge.clean    { background: rgba(34,197,94,0.15);  color: var(--green);  border: 1px solid rgba(34,197,94,0.3); }
+    .badge.danger   { background: rgba(239,68,68,0.2);   color: var(--red);    border: 1px solid rgba(239,68,68,0.4); }
+    .badge.warning  { background: rgba(249,115,22,0.2);  color: var(--orange); border: 1px solid rgba(249,115,22,0.4); }
+    .badge.unknown  { background: rgba(136,146,164,0.15); color: var(--muted);  border: 1px solid rgba(136,146,164,0.3); }
+    .badge.info     { background: rgba(59,130,246,0.15); color: var(--blue);   border: 1px solid rgba(59,130,246,0.3); }
+    ul.recs { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+    ul.recs li { padding: 0.65rem 1rem; border-radius: 8px; font-size: 0.85rem; }
+    .rec-critical { background: rgba(239,68,68,0.1);  border-left: 3px solid var(--red);    }
+    .rec-high     { background: rgba(249,115,22,0.1); border-left: 3px solid var(--orange); }
+    .rec-medium   { background: rgba(234,179,8,0.1);  border-left: 3px solid var(--yellow); }
+    .rec-info     { background: rgba(59,130,246,0.1); border-left: 3px solid var(--blue);   }
+    .rec-clean    { background: rgba(34,197,94,0.1);  border-left: 3px solid var(--green);  }
+    .stats { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1.25rem; min-width: 120px; }
+    .stat-box .n { font-size: 1.8rem; font-weight: 700; line-height: 1; }
+    .stat-box .l { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; margin-top: 0.2rem; }
+    .n.danger { color: var(--red); }
+    .n.warn   { color: var(--orange); }
+    .n.ok     { color: var(--green); }
+    footer { margin-top: 3rem; font-size: 0.75rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: 1rem; }
+  </style>
+</head>
+<body>
+
+<h1>🔒 Security Audit Report</h1>
+<div class="subtitle">Host: <strong>kali</strong> &nbsp;|&nbsp; Generated: 2026-05-05 21:32:03 UTC</div>
+
+<div class="risk-banner risk-low">
+  <div>
+    <div class="risk-label">Overall Risk: Low</div>
+    <div style="font-size:0.82rem;margin-top:0.2rem;color:var(--muted)">
+      0 suspicious process(es) &nbsp;·&nbsp;
+      0 suspicious connection(s) &nbsp;·&nbsp;
+      1 open port(s)
+    </div>
+  </div>
+</div>
+
+<section>
+  <h2>Executive Summary</h2>
+  <div class="stats">
+    <div class="stat-box">
+      <div class="n ok">1</div>
+      <div class="l">Open Ports</div>
+    </div>
+    <div class="stat-box">
+      <div class="n ok">0</div>
+      <div class="l">Suspicious Procs</div>
+    </div>
+    <div class="stat-box">
+      <div class="n ok">0</div>
+      <div class="l">Suspicious Conns</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Open Ports</h2>
+  <table>
+    <thead><tr><th>Proto</th><th>Port</th><th>Local Address</th><th>Process</th></tr></thead>
+    <tbody>
+      <tr><td>LISTEN</td><td>5001</td><td>0.0.0.0:5001</td><td>users:(("python3",pid=25964,fd=3))</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Process VirusTotal Analysis</h2>
+  <table>
+    <thead><tr><th>Executable</th><th>SHA256</th><th>VT Result</th></tr></thead>
+    <tbody>
+      <tr ><td style='word-break:break-all'>/usr/bin/bash</td><td style='font-family:monospace;font-size:0.75rem'>223fe8564b60636bc738b6178d3ba9a50ef7d791266b0efae6363bb716e4c47f</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/dash</td><td style='font-family:monospace;font-size:0.75rem'>a6f559e00b69a4aa4d8cb607be18d9386c5aee55c509e2c075549dcf00e00fc7</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/dbus-daemon</td><td style='font-family:monospace;font-size:0.75rem'>32c90f7766d01081f0f052ef8a2879214a69fb8355d5034a07a8ce54c8e8e320</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/gawk</td><td style='font-family:monospace;font-size:0.75rem'>c90aba59e13752526d9cb767533f3802d3b7cd5dd6355615516d21abbc28b005</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/gnome-keyring-daemon</td><td style='font-family:monospace;font-size:0.75rem'>93b44d40cbbc84872fc947186aa5f2fd9a8189377328d29322f514944900932b</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/head</td><td style='font-family:monospace;font-size:0.75rem'>da3f5fd6d0895cf2a47f9a5167df351f318423630120363f3e459af72abb4676</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/mpris-proxy</td><td style='font-family:monospace;font-size:0.75rem'>79e4fe04cd3775ddb2b72b8167fd4725bbb520affc972bac2b70d01ac0d105fe</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/nm-applet</td><td style='font-family:monospace;font-size:0.75rem'>9090254042b69bf51f8266647470e8d8f2b1fe72ca256954ee2058c5336dada4</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/pipewire</td><td style='font-family:monospace;font-size:0.75rem'>7530626bbfff8c2745e593ed9d03dbc4b9da6aa3a75e2da4735065318fff470b</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/ps</td><td style='font-family:monospace;font-size:0.75rem'>43b8d2d049183e9ebc409c86b89150b5a4a68fa19fe1815b16bed5561921a9c3</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/python3.13</td><td style='font-family:monospace;font-size:0.75rem'>cd3c1349638f564447b0ead1ecc4e3747951cd2eabedb504faa09c6d49af7164</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/qterminal</td><td style='font-family:monospace;font-size:0.75rem'>33005368fe7fdf30c5c90fd58c39e007f06096d9aab9e0d913cb9e06b537bd30</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/sleep</td><td style='font-family:monospace;font-size:0.75rem'>14f5c2df54e339875ae013f8339f4cf532ede9329eb53fe0e9d793e8f42d2e37</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/sort</td><td style='font-family:monospace;font-size:0.75rem'>68b9f8ac4c5fa6a2c7e5168c41170ff2b150ddb6037b2f0ac08f020cea934eef</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/thunar</td><td style='font-family:monospace;font-size:0.75rem'>805f5a73dc71795495c3abb209f582a15450698f5b4d394818e2a82c15adeb7f</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/wireplumber</td><td style='font-family:monospace;font-size:0.75rem'>63ded0849c499b9cb2974975141bd9801d0af2fc7e2a1adcf08a65897441d698</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/xcape</td><td style='font-family:monospace;font-size:0.75rem'>4344c19c3bc3249abf96c85479701e5b2eeb65a4866771c986b277b3370d4b74</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/xfce4-panel</td><td style='font-family:monospace;font-size:0.75rem'>e9fd5559027bd62cf3cc8a681e20c686bc8d3e42a2e896b59e7a5f542aa404f6</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/xfce4-power-manager</td><td style='font-family:monospace;font-size:0.75rem'>d8dcc1ff6b6687f8301d304908be046597cbde838b17263601e0272573a21d54</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/xfce4-screensaver</td><td style='font-family:monospace;font-size:0.75rem'>6d253ec26da8369a41c61d77fc7d4fff4e992a86ee488b7e61772c1d21e60748</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/xfce4-session</td><td style='font-family:monospace;font-size:0.75rem'>3c6b8a80b9d9207c765b22c9185511cf184cd772c9848e24119cbd6f8d118e7d</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/xfdesktop</td><td style='font-family:monospace;font-size:0.75rem'>f8ccef732977d9fed4e2e02a5307b86464415eac0614da1c8eb73145095dd7d6</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/xfsettingsd</td><td style='font-family:monospace;font-size:0.75rem'>805f0e31696bc25c60e3e50ee1fe22070e434e06139735be09ed855d53ccae8b</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/xfwm4</td><td style='font-family:monospace;font-size:0.75rem'>79f18ffbece93c8ac0a8c5e2171192c7ebbc8689960ee9da1f562d1be62c30eb</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/xiccd</td><td style='font-family:monospace;font-size:0.75rem'>6ef75e85759f2e3d88099285ee429af5bf6e588b2ae8c5fb3995720d2abf007a</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/bin/zsh</td><td style='font-family:monospace;font-size:0.75rem'>7c35b1a4710c9770442d353b9eee86d1c32ef8669efc7704f5dd550e38a5a67a</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/libexec/at-spi2-registryd</td><td style='font-family:monospace;font-size:0.75rem'>428c3a6d074b50748f2a74ec61ef6b0ae0816c450c9447577d610ef903137694</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/libexec/at-spi-bus-launcher</td><td style='font-family:monospace;font-size:0.75rem'>dfa902734ac9adea3044dd1cd0f23164bff8bfb681bfc55be491f125c55faa31</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/libexec/bluetooth/obexd</td><td style='font-family:monospace;font-size:0.75rem'>38e1f0349af656068c9c670fdcc96a18db05103c68182703fcd47f893d09c951</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/libexec/dconf-service</td><td style='font-family:monospace;font-size:0.75rem'>e7a083f8b846df8fa3b67dbc53f1ddb1cb21ea58b7fc8cae9f77b0e0ee2e1ca5</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/libexec/geoclue-2.0/demos/agent</td><td style='font-family:monospace;font-size:0.75rem'>902d0fbf614a7c985a9a98918c41bcbe52a30088ff743996a68f5dfced999908</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/libexec/gvfs-afc-volume-monitor</td><td style='font-family:monospace;font-size:0.75rem'>accb9eb1aa61234766a1887889ee2147ebd281a07b01c00402b1b385bd398415</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/libexec/gvfsd</td><td style='font-family:monospace;font-size:0.75rem'>eba4247d0430639741f4cf076c8e571a57e54e8cfb434a5142a2659844c3df9c</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/libexec/gvfsd-fuse</td><td style='font-family:monospace;font-size:0.75rem'>0f69f33c2a1161e2b513bf37b9a48c80215d47201d7efed8d29a049c8a0241b0</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/libexec/gvfsd-metadata</td><td style='font-family:monospace;font-size:0.75rem'>ec9bdc37429d1291869a1b4009d941982436c802a529ff48b4740eb1caa7776c</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/libexec/gvfsd-trash</td><td style='font-family:monospace;font-size:0.75rem'>ae2c926ef46fc17227c3b1a3e54fc81d808351ef0a45c5c7c3a538814fd6ee78</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/libexec/gvfs-goa-volume-monitor</td><td style='font-family:monospace;font-size:0.75rem'>54ce58e3819fe6d72ca71c1605820cf2f92f48e645f62ddf3ba04e22baa70e63</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/libexec/gvfs-gphoto2-volume-monitor</td><td style='font-family:monospace;font-size:0.75rem'>dff82e8b725a7c544f30bbc343e74733e46fac2dd123fb5d4a1e887949ce2da3</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/libexec/gvfs-mtp-volume-monitor</td><td style='font-family:monospace;font-size:0.75rem'>ba972c6fb885d130e500cd367612cc0f1317646f51674691cd8ea7cb4b7b0997</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/libexec/gvfs-udisks2-volume-monitor</td><td style='font-family:monospace;font-size:0.75rem'>7ca8d729c0484137850d909834fa0dca711556333342b30d23e9f04c4e8a1611</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/libexec/polkit-mate-authentication-agent-1</td><td style='font-family:monospace;font-size:0.75rem'>8f8e992a35139267bb3a10acbf747d414f55c34238b0773258ea9c0c61efc625</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/libexec/xdg-desktop-portal</td><td style='font-family:monospace;font-size:0.75rem'>970101e3cdd111c945da4195dcc905995951c65fc047c1c41afe55fe690631fb</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/libexec/xdg-desktop-portal-gtk</td><td style='font-family:monospace;font-size:0.75rem'>eaae3b0d2ece4e6c56e820b34a30dfeed439482de77cc5f998975e7bfdd3bf89</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/libexec/xdg-document-portal</td><td style='font-family:monospace;font-size:0.75rem'>e5f98954c5b470ae854bfbe7c4f9e333dc85be1945597452c95c6e1d63d88244</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/libexec/xdg-permission-store</td><td style='font-family:monospace;font-size:0.75rem'>750f2e8e2966e1c8e32712ed5ae7e71e7e258453e1883284754312701eb2fc59</td><td><span class='badge unknown'>Unknown</span></td></tr><tr ><td style='word-break:break-all'>/usr/lib/firefox-esr/firefox-esr</td><td style='font-family:monospace;font-size:0.75rem'>bb390a78d7d54c18b06f92021197cbedd2fc62c74751fa124abddb9f5512eb4d</td><td><span class='badge unknown'>Unknown</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Network Connections</h2>
+  <table>
+    <thead><tr><th>Local</th><th>Remote</th><th>Process</th><th>VT Result</th></tr></thead>
+    <tbody>
+      <tr ><td>34.107.243.93:443</td><td>users:(("x-www-browser",pid=24019,fd=122))</td><td>—</td><td><span class='badge unknown'>Unknown</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Recommendations</h2>
+  <ul class="recs">
+    <li class='rec-clean'>✅ No significant issues detected. Continue routine monitoring.</li>
+  </ul>
+</section>
+
+<footer>
+  Generated by security_audit.sh on kali at 2026-05-05 21:32:03 UTC &nbsp;·&nbsp;
+  VirusTotal API used: Yes
+</footer>
+
+</body>
+</html>

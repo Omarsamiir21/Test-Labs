@@ -2,16 +2,16 @@
   "hostname": "DESKTOP-OTLQ542",
   "ip": "172.21.70.141",
   "os": "Kali GNU/Linux Rolling",
-  "cpu_pct": 0.1,
-  "ram_used_mb": 584,
+  "cpu_pct": 2.0,
+  "ram_used_mb": 1509,
   "ram_total_mb": 15925,
-  "ram_pct": 3.7,
-  "disk_used_mb": 2032,
+  "ram_pct": 9.5,
+  "disk_used_mb": 2041,
   "disk_total_mb": 1031019,
   "disk_pct": 1,
-  "uptime": "0d 0h 20m",
+  "uptime": "0d 1h 1m",
   "services": [
     "cron"
   ],
-  "timestamp": "2026-05-05T20:57:02Z"
+  "timestamp": "2026-05-05T21:38:03Z"
 }

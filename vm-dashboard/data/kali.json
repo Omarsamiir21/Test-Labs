@@ -1,0 +1,17 @@
+{
+  "hostname": "kali",
+  "ip": "192.168.32.134",
+  "os": "Kali GNU/Linux Rolling",
+  "cpu_pct": 0.5,
+  "ram_used_mb": 1243,
+  "ram_total_mb": 3912,
+  "ram_pct": 31.8,
+  "disk_used_mb": 18903,
+  "disk_total_mb": 80160,
+  "disk_pct": 25,
+  "uptime": "0d 0h 58m",
+  "services": [
+    "cron"
+  ],
+  "timestamp": "2026-05-05T21:38:03Z"
+}
