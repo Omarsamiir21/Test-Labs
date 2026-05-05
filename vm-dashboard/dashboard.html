@@ -264,6 +264,52 @@
 
     .empty-state p { margin-top: 0.5rem; font-size: 0.85rem; }
 
+    /* ── Security audit button & status ───────────────────────────────────── */
+    .audit-section {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      padding-top: 0.25rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .audit-info {
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    .btn-audit {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.35rem 0.85rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.2s, background 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-audit:disabled { opacity: 0.6; cursor: default; }
+
+    .btn-audit.idle    { background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.4); }
+    .btn-audit.running { background: rgba(234,179,8,0.15); color: var(--yellow); border: 1px solid rgba(234,179,8,0.35); }
+    .btn-audit.ready   { background: rgba(34,197,94,0.15); color: var(--green);  border: 1px solid rgba(34,197,94,0.35); }
+
+    .spinner {
+      display: inline-block;
+      width: 10px; height: 10px;
+      border: 2px solid rgba(234,179,8,0.3);
+      border-top-color: var(--yellow);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     /* ── Responsive ────────────────────────────────────────────────────────── */
     @media (max-width: 600px) {
       header         { padding: 0.75rem 1rem; }
@@ -400,7 +446,47 @@
           </div>
           <div class="last-seen">Last seen<br>${timeAgo(vm.timestamp)}</div>
         </div>
+
+        <div class="audit-section">
+          ${auditFooterHtml(vm.hostname)}
+        </div>
       </div>
+    `;
+  }
+
+  // ── Security audit state ──────────────────────────────────────────────────
+  // Maps hostname → { state: 'idle'|'running'|'ready', reportUrl, lastAudit }
+  const auditState = {};
+
+  function auditFooterHtml(hostname) {
+    const s = auditState[hostname] || { state: 'idle' };
+
+    let btnLabel, btnClass, btnDisabled, infoText;
+
+    if (s.state === 'running') {
+      btnLabel   = `<span class="spinner"></span>Audit Running…`;
+      btnClass   = 'running';
+      btnDisabled = 'disabled';
+      infoText   = 'Checking every 10s…';
+    } else if (s.state === 'ready') {
+      btnLabel   = '🔍 View Report';
+      btnClass   = 'ready';
+      btnDisabled = '';
+      infoText   = s.lastAudit ? `Last audit: ${s.lastAudit}` : '';
+    } else {
+      btnLabel   = '🛡 Run Security Audit';
+      btnClass   = 'idle';
+      btnDisabled = '';
+      infoText   = s.lastAudit ? `Last audit: ${s.lastAudit}` : 'No report yet';
+    }
+
+    const onclick = s.state === 'ready'
+      ? `window.open('${s.reportUrl}', '_blank')`
+      : `triggerAudit('${hostname}')`;
+
+    return `
+      <span class="audit-info">${infoText}</span>
+      <button class="btn-audit ${btnClass}" ${btnDisabled} onclick="${onclick}">${btnLabel}</button>
     `;
   }
 
@@ -441,9 +527,80 @@
     }
   }
 
+  // ── Trigger a security audit for one VM ──────────────────────────────────
+  async function triggerAudit(hostname) {
+    auditState[hostname] = { state: 'running' };
+    // Re-render to show spinner immediately
+    await refresh();
+
+    try {
+      const res = await fetch(`/api/trigger/${encodeURIComponent(hostname)}`, { method: 'POST' });
+      if (!res.ok) {
+        const body = await res.text();
+        console.error(`Trigger failed for ${hostname}: ${body}`);
+        auditState[hostname] = { state: 'idle', lastAudit: auditState[hostname]?.lastAudit };
+        await refresh();
+      }
+      // On success, keep state as 'running'; polling will detect when report arrives
+    } catch (err) {
+      console.error('Trigger error:', err);
+      auditState[hostname] = { state: 'idle', lastAudit: auditState[hostname]?.lastAudit };
+      await refresh();
+    }
+  }
+
+  // ── Poll /api/reports and update audit state ──────────────────────────────
+  async function pollReports() {
+    try {
+      const res = await fetch('/api/reports');
+      if (!res.ok) return;
+      const { reports } = await res.json();
+
+      // Build a map of hostname → latest report
+      const latestByHost = {};
+      for (const r of reports) {
+        if (!latestByHost[r.hostname] || r.timestamp > latestByHost[r.hostname].timestamp) {
+          latestByHost[r.hostname] = r;
+        }
+      }
+
+      for (const [hostname, report] of Object.entries(latestByHost)) {
+        const current = auditState[hostname];
+        const formattedTime = report.timestamp
+          ? new Date(report.timestamp).toLocaleString()
+          : 'unknown';
+
+        // If we were waiting for this host, mark it ready
+        if (current?.state === 'running') {
+          auditState[hostname] = {
+            state:     'ready',
+            reportUrl: report.url,
+            lastAudit: formattedTime,
+          };
+        } else if (!current || current.state === 'idle') {
+          // Pre-populate from existing reports so cards show last audit time on load
+          auditState[hostname] = {
+            state:     'ready',
+            reportUrl: report.url,
+            lastAudit: formattedTime,
+          };
+        }
+      }
+    } catch (err) {
+      console.error('Report poll error:', err);
+    }
+  }
+
   // Initial load then poll every 10 s
-  refresh();
-  setInterval(refresh, 10_000);
+  // Reports are polled on the same interval so the UI updates when an audit finishes.
+  (async () => {
+    await pollReports();
+    await refresh();
+  })();
+  setInterval(async () => {
+    await pollReports();
+    await refresh();
+  }, 10_000);
 </script>
 </body>
 </html>
