@@ -1,4 +1,4 @@
-# test-Labs
+# Test-Labs
 
 A collection of self-contained, hands-on Linux labs that simulate real-world sysadmin and security problems. Each lab uses only what is already on a standard Debian/Ubuntu VM — no extra hardware or cloud accounts required.
 
