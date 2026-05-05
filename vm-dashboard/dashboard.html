@@ -293,9 +293,15 @@
 
     .btn-audit:disabled { opacity: 0.6; cursor: default; }
 
-    .btn-audit.idle    { background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.4); }
-    .btn-audit.running { background: rgba(234,179,8,0.15); color: var(--yellow); border: 1px solid rgba(234,179,8,0.35); }
-    .btn-audit.ready   { background: rgba(34,197,94,0.15); color: var(--green);  border: 1px solid rgba(34,197,94,0.35); }
+    .btn-audit.idle    { background: rgba(99,102,241,0.2);  color: #a5b4fc;        border: 1px solid rgba(99,102,241,0.4); }
+    .btn-audit.running { background: rgba(234,179,8,0.15); color: var(--yellow);  border: 1px solid rgba(234,179,8,0.35); }
+    .btn-audit.ready   { background: rgba(34,197,94,0.15); color: var(--green);   border: 1px solid rgba(34,197,94,0.35); }
+    .btn-audit.rerun   { background: rgba(59,130,246,0.15); color: var(--blue);   border: 1px solid rgba(59,130,246,0.35); }
+
+    .audit-buttons {
+      display: flex;
+      gap: 0.4rem;
+    }
 
     .spinner {
       display: inline-block;
@@ -461,32 +467,38 @@
   function auditFooterHtml(hostname) {
     const s = auditState[hostname] || { state: 'idle' };
 
-    let btnLabel, btnClass, btnDisabled, infoText;
-
     if (s.state === 'running') {
-      btnLabel   = `<span class="spinner"></span>Audit Running…`;
-      btnClass   = 'running';
-      btnDisabled = 'disabled';
-      infoText   = 'Checking every 10s…';
-    } else if (s.state === 'ready') {
-      btnLabel   = '🔍 View Report';
-      btnClass   = 'ready';
-      btnDisabled = '';
-      infoText   = s.lastAudit ? `Last audit: ${s.lastAudit}` : '';
-    } else {
-      btnLabel   = '🛡 Run Security Audit';
-      btnClass   = 'idle';
-      btnDisabled = '';
-      infoText   = s.lastAudit ? `Last audit: ${s.lastAudit}` : 'No report yet';
+      const spinnerBtn = `<button class="btn-audit running" disabled><span class="spinner"></span>Audit Running…</button>`;
+      if (s.previousReportUrl) {
+        // Re-run in progress — still let the user view the old report
+        return `
+          <span class="audit-info">${s.lastAudit ? `Last audit: ${s.lastAudit}` : 'Checking every 10s…'}</span>
+          <div class="audit-buttons">
+            <button class="btn-audit ready" onclick="window.open('${s.previousReportUrl}', '_blank')">🔍 View Report</button>
+            ${spinnerBtn}
+          </div>
+        `;
+      }
+      return `
+        <span class="audit-info">Checking every 10s…</span>
+        ${spinnerBtn}
+      `;
     }
 
-    const onclick = s.state === 'ready'
-      ? `window.open('${s.reportUrl}', '_blank')`
-      : `triggerAudit('${hostname}')`;
+    if (s.state === 'ready') {
+      return `
+        <span class="audit-info">${s.lastAudit ? `Last audit: ${s.lastAudit}` : ''}</span>
+        <div class="audit-buttons">
+          <button class="btn-audit ready" onclick="window.open('${s.reportUrl}', '_blank')">🔍 View Report</button>
+          <button class="btn-audit rerun" onclick="triggerRerun('${hostname}')">🔄 Re-run Audit</button>
+        </div>
+      `;
+    }
 
+    // idle
     return `
-      <span class="audit-info">${infoText}</span>
-      <button class="btn-audit ${btnClass}" ${btnDisabled} onclick="${onclick}">${btnLabel}</button>
+      <span class="audit-info">${s.lastAudit ? `Last audit: ${s.lastAudit}` : 'No report yet'}</span>
+      <button class="btn-audit idle" onclick="triggerAudit('${hostname}')">🛡 Run Security Audit</button>
     `;
   }
 
@@ -529,8 +541,7 @@
 
   // ── Trigger a security audit for one VM ──────────────────────────────────
   async function triggerAudit(hostname) {
-    auditState[hostname] = { state: 'running' };
-    // Re-render to show spinner immediately
+    auditState[hostname] = { state: 'running', triggeredAt: Date.now() };
     await refresh();
 
     try {
@@ -538,13 +549,38 @@
       if (!res.ok) {
         const body = await res.text();
         console.error(`Trigger failed for ${hostname}: ${body}`);
-        auditState[hostname] = { state: 'idle', lastAudit: auditState[hostname]?.lastAudit };
+        auditState[hostname] = { state: 'idle' };
         await refresh();
       }
-      // On success, keep state as 'running'; polling will detect when report arrives
     } catch (err) {
       console.error('Trigger error:', err);
-      auditState[hostname] = { state: 'idle', lastAudit: auditState[hostname]?.lastAudit };
+      auditState[hostname] = { state: 'idle' };
+      await refresh();
+    }
+  }
+
+  // ── Re-run audit when a report already exists ────────────────────────────
+  async function triggerRerun(hostname) {
+    const prev = auditState[hostname] || {};
+    auditState[hostname] = {
+      state:             'running',
+      triggeredAt:       Date.now(),
+      previousReportUrl: prev.reportUrl,
+      lastAudit:         prev.lastAudit,
+    };
+    await refresh();
+
+    try {
+      const res = await fetch(`/api/trigger/${encodeURIComponent(hostname)}`, { method: 'POST' });
+      if (!res.ok) {
+        const body = await res.text();
+        console.error(`Re-run failed for ${hostname}: ${body}`);
+        auditState[hostname] = { state: 'ready', reportUrl: prev.reportUrl, lastAudit: prev.lastAudit };
+        await refresh();
+      }
+    } catch (err) {
+      console.error('Re-run error:', err);
+      auditState[hostname] = { state: 'ready', reportUrl: prev.reportUrl, lastAudit: prev.lastAudit };
       await refresh();
     }
   }
@@ -569,14 +605,17 @@
         const formattedTime = report.timestamp
           ? new Date(report.timestamp).toLocaleString()
           : 'unknown';
+        const reportTime = report.timestamp ? new Date(report.timestamp).getTime() : 0;
 
-        // If we were waiting for this host, mark it ready
         if (current?.state === 'running') {
-          auditState[hostname] = {
-            state:     'ready',
-            reportUrl: report.url,
-            lastAudit: formattedTime,
-          };
+          // Only mark ready when the report is newer than when we triggered the run
+          if (reportTime > (current.triggeredAt || 0)) {
+            auditState[hostname] = {
+              state:     'ready',
+              reportUrl: report.url,
+              lastAudit: formattedTime,
+            };
+          }
         } else if (!current || current.state === 'idle') {
           // Pre-populate from existing reports so cards show last audit time on load
           auditState[hostname] = {
