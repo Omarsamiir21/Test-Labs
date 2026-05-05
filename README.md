@@ -1,80 +1,76 @@
-# Test-Labs
+# Test Labs - Technical Lab Portfolio
 
-A collection of self-contained, hands-on Linux labs that simulate real-world sysadmin and security problems. Each lab uses only what is already on a standard Debian/Ubuntu VM — no extra hardware or cloud accounts required.
+A collection of hands-on technical labs built to demonstrate skills in Linux administration, storage management, and infrastructure monitoring. Each lab simulates a real-world scenario using only standard tools available on a Debian/Ubuntu system — no cloud accounts or extra hardware required.
 
 ---
 
 ## Labs
 
-| Lab | Topic | Tasks | Requires |
-|-----|-------|-------|---------|
-| [linux-hardening-lab](./linux-hardening-lab/) | Security hardening | 5 | sudo, ufw, openssh |
-| [disk-storage-lab](./disk-storage-lab/) | LVM & disk management | 5 | sudo, lvm2, e2fsprogs |
-
----
-
-## How Every Lab Works
-
-Each lab follows the same three-script pattern:
-
-```
-<lab-name>/
-├── README.md           ← scenario description and task list
-├── setup.sh            ← creates the broken/incomplete environment
-├── validate.sh         ← checks each task, prints PASS/FAIL + score
-├── reset.sh            ← tears down and recreates the environment
-└── solutions/
-    └── solution-guide.md   ← full walkthrough (try first!)
-```
-
-```bash
-# 1. Read the lab README to understand the scenario
-# 2. Break the environment
-sudo bash setup.sh
-
-# 3. Work through the tasks
-# 4. Check your progress at any time
-sudo bash validate.sh
-
-# 5. Reset if you want to start over
-sudo bash reset.sh
-```
-
-> All setup/validate/reset scripts require root. Run them with `sudo bash <script>` or from a root shell. **Use a dedicated VM — setup scripts intentionally misconfigure the system.**
-
----
-
-## Lab Summaries
-
 ### linux-hardening-lab
 
-You inherit a server left in a dangerously insecure state. Five misconfigurations need to be found and fixed before an attacker exploits them.
+Deploys a misconfigured Linux system with 5 deliberate security issues. The learner identifies and fixes each one; an automated validation script checks their work and reports a score.
 
-| # | Problem |
-|---|---------|
-| 1 | Weak password (`123456`) on a user account |
-| 2 | SSH configured to allow direct root login |
-| 3 | A secrets file left world-readable and world-writable |
-| 4 | Telnet service running and exposing plaintext credentials |
-| 5 | UFW firewall disabled |
+**Skills demonstrated:** Security auditing, SSH hardening, firewall configuration, file permissions, service management
 
-**Skills practiced:** `passwd`, `sshd_config`, `chmod`, `systemctl`, `ufw`
+**How to run:**
+```bash
+cd linux-hardening-lab
+sudo bash setup.sh      # deploy the misconfigured environment
+sudo bash validate.sh   # check progress (run anytime)
+sudo bash reset.sh      # start over
+```
+
+> Use a dedicated VM. `setup.sh` intentionally misconfigures the system.
 
 ---
 
 ### disk-storage-lab
 
-You take over a server where a storage volume was partially configured with LVM and left broken. Five storage problems need to be resolved.
+Simulates real-world storage problems using LVM and loop devices. The learner extends volumes, fixes a broken `fstab` entry, and formats and mounts an unformatted disk.
 
-| # | Problem |
-|---|---------|
-| 1 | Mount point permissions set to root-only (`700`) |
-| 2 | Second disk attached but never formatted |
-| 3 | Volume group not extended with the new disk |
-| 4 | Logical volume and filesystem never grown to use the extra space |
-| 5 | `/etc/fstab` entry has a wrong UUID that would break on reboot |
+**Skills demonstrated:** LVM management (`pvcreate`, `vgextend`, `lvextend`), filesystem operations (`mkfs.ext4`, `resize2fs`), `fstab` configuration, `blkid`, mount management
 
-**Skills practiced:** `chmod`, `mkfs.ext4`, `pvcreate`, `vgextend`, `lvextend`, `resize2fs`, `blkid`, `/etc/fstab`
+**How to run:**
+```bash
+cd disk-storage-lab
+sudo bash setup.sh      # create the broken storage environment
+sudo bash validate.sh   # check progress (run anytime)
+sudo bash reset.sh      # start over
+```
+
+---
+
+### vm-dashboard
+
+A live VM health monitoring dashboard. `agent.sh` runs on any Linux machine and reports CPU, RAM, disk usage, and service status to a central Flask server. Results are displayed in a dark-themed web UI that auto-refreshes.
+
+**Skills demonstrated:** Bash scripting, Python/Flask web development, system metrics collection, HTTP API design, multi-host monitoring
+
+**How to run:**
+```bash
+cd vm-dashboard
+
+# Start the Flask server
+pip install flask
+python3 server.py
+
+# On each machine to monitor (separate terminal or remote host)
+bash agent.sh
+```
+
+Open `http://localhost:5000` in your browser to view the dashboard.
+
+---
+
+## Tools & Technologies
+
+| Category | Technologies |
+|----------|-------------|
+| Scripting | Bash |
+| Web / API | Python, Flask |
+| Storage | LVM, loop devices, ext4 |
+| Linux Admin | systemctl, ufw, sshd, fstab, file permissions |
+| Version Control | Git |
 
 ---
 
@@ -83,15 +79,7 @@ You take over a server where a storage volume was partially configured with LVM 
 A Debian/Ubuntu VM with:
 
 ```bash
-sudo apt install lvm2 e2fsprogs ufw openssh-server
+sudo apt install lvm2 e2fsprogs ufw openssh-server python3-pip
 ```
 
-Root or `sudo` access is required for all lab scripts.
-
----
-
-## Recommended Setup
-
-- **VirtualBox / VMware / QEMU** with a fresh Debian or Ubuntu install
-- At least **1 GB RAM** and **5 GB disk** (labs use sparse loop-device images, not real partitions)
-- Take a VM snapshot before running `setup.sh` so you can restore without reinstalling
+Root or `sudo` access is required for all lab setup and validation scripts. It is recommended to run labs inside a VM snapshot so you can restore cleanly without reinstalling.
