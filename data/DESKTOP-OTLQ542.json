@@ -1,0 +1,17 @@
+{
+  "hostname": "DESKTOP-OTLQ542",
+  "ip": "172.21.70.141",
+  "os": "Kali GNU/Linux Rolling",
+  "cpu_pct": 0.4,
+  "ram_used_mb": 585,
+  "ram_total_mb": 15925,
+  "ram_pct": 3.7,
+  "disk_used_mb": 2031,
+  "disk_total_mb": 1031019,
+  "disk_pct": 1,
+  "uptime": "0d 0h 15m",
+  "services": [
+    "cron"
+  ],
+  "timestamp": "2026-05-05T20:52:02Z"
+}
